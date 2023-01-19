@@ -10,8 +10,8 @@ var shouldStop = false;
 var isRunning = false;
 var schedule = {
     isRunning: false,
-    start: new Date().setHours(7),
-    end: new Date().setHours(18)
+    start: new Date().setHours(15),// 7AM IN PST
+    end: new Date().setHours(25) // 
 }
 //initialize app
 const app = express();
