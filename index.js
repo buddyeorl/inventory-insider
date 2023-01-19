@@ -1,6 +1,21 @@
-import fetch from 'node-fetch'
-import request from 'request'
-import cheerio from 'cheerio'
+import express from 'express';
+import fetch from 'node-fetch';
+import request from 'request';
+import cheerio from 'cheerio';
+import fs from 'fs';
+
+
+const PORT = process.env.PORT || 3001;
+var shouldStop = false;
+var isRunning = false;
+var schedule = {
+    isRunning: false,
+    start: new Date().setHours(7),
+    end: new Date().setHours(18)
+}
+//initialize app
+const app = express();
+app.use(express.json());
 
 let currentUrlIndex = -1;
 const url = [
@@ -58,27 +73,13 @@ function crawlWebsite() {
                 // 'Pragma': 'no-cache',
                 'Cache-Control': 'no-cache'
             }
-        }, function (error, response, html) {
+        }, async function (error, response, html) {
             console.log('request recevied', response.statusCode)
+            await writeToFile('./logs/last.json', [response.statusCode]);
             if (!error && response.statusCode == 200) {
                 // parse the HTML of the website
                 const $ = cheerio.load(html);
-                const abx = $('span').filter((i, el) => {
-                    console.log($(el).text().toLowerCase())
-                    let currentElText = $(el).text().toLowerCase()
-                    let found = targetList.some(target => currentElText.includes(target))
-                    // if (currentElText.includes(targetString.toLowerCase()) || currentElText.includes(targetString2.toLowerCase()))
-                    if (found)
-                        return true
-                    else {
-                        return false
-                    }
-                });
 
-                // if ($(el).attr('alt') !== undefined) {
-                //     console.log("alt attribute", $(el).attr('alt'))
-                //     currentElText = $(el).attr('alt').toLowerCase()
-                // }
                 const links = $('a').filter((i, el) => {
                     let currentElText = $(el).text().toLowerCase();
                     let found = targetList.some(target => currentElText.includes(target))
@@ -86,7 +87,7 @@ function crawlWebsite() {
                         // Search for images inside the current 'a' element
                         const images = $(el).find('img').filter((i, el) => {
                             let currentAlt = $(el).attr('alt').toLowerCase();
-                            console.log(currentAlt)
+                            console.log("Current Image Alt", currentAlt)
                             let found = targetList.some(target => currentAlt.includes(target))
                             if (found)
                                 return true;
@@ -103,11 +104,14 @@ function crawlWebsite() {
                 if (links.length > 0) {
                     console.log(`Match found}`);
                     console.log(`URLs:`);
+
                     sendSlackMessage(`Match found`, "T04GK53T3V5", "B04GT47FA06", "GnDr0oyA9b6TgI1WswCqy9sK")
                     links.each((i, el) => {
                         sendSlackMessage(`https://www.hermes.com${$(el).attr('href')}`, "T04GK53T3V5", "B04GT47FA06", "GnDr0oyA9b6TgI1WswCqy9sK")
                         console.log("https://www.hermes.com" + $(el).attr('href'));
                     });
+
+                    await writeToFile('./logs/allFound.json', links.map((el) => $(el).attr('href')));
                 } else {
                     console.log(`Match not found`);
                 }
@@ -129,13 +133,92 @@ const randomDelay = async () => {
     if (currentUrlIndex >= url.length) {
         currentUrlIndex = 0;
     }
-    await crawlWebsite();
-    setTimeout(() => {
+
+    let currentTime = new Date();
+    let isScheduledFinished = currentTime > schedule.start && currentTime < schedule.end
+    if ((schedule.isRunning && !isScheduledFinished) || !(schedule.isRunning && shouldStop)) {
+        console.log(`current time ${isScheduledFinished}, schedule time ${schedule.end}, currentTime ${currentTime}`)
+        await crawlWebsite();
+    }
+    // await crawlWebsite();
+    // continue until we call the stop endpoint
+    if (!shouldStop) {
+        setTimeout(() => {
+            randomDelay();
+        }, currentDelay * 1000)
+    }
+}
+
+app.post('/api/follow', (req, res) => {
+    const { order } = req.body;
+    if (order === "run-schedule") {
+        if (isRunning) {
+            res.json({ error: "To start a new crawler you should stop the current one" })
+        } else {
+            isRunning = true;
+            shouldStop = false;
+            schedule.isRunning = true;
+            randomDelay();
+            res.json({ message: `Running schedule, current server time ${new Date()}` })
+        }
+
+    }
+    if (order === "start" && !isRunning) {
+        isRunning = true;
+        shouldStop = false;
         randomDelay();
-    }, currentDelay * 1000)
+        res.json({ message: "Crawler started successfully" })
+    }
+    if (order === "stop") {
+        schedule.isRunning = false;
+        isRunning = false;
+        shouldStop = true;
+        res.json({ message: "Crawler stopped successfully" })
+    }
+})
+
+app.get("/api/found", async (req, res) => {
+    let data = await readFile('./logs/allFound.json')
+    res.json({ ...data })
+})
+
+app.get("/api/last", async (req, res) => {
+    let data = await readFile('./logs/last.json')
+    res.json({ ...data })
+})
+
+app.get("/api/status", async (req, res) => {
+    res.json({ schedule, isRunning, shouldStop })
+})
+
+const readFile = (path) => {
+    return new Promise((res, rej) => {
+        fs.readFile(path, "utf-8", (err, data) => {
+            if (err) {
+                res({ error: err })
+            } else {
+                res({ found: JSON.parse(data) })
+            }
+        })
+    })
 
 }
 
-// run the crawlWebsite function every 60 seconds
-randomDelay();
+const writeToFile = async (path, data) => {
+    let currentData = await readFile(path);
+    let newData = [...currentData?.found, ...data]
+    return new Promise((res, rej) => {
+        fs.writeFile(path, JSON.stringify(newData), (err) => {
+            if (err) {
+                res()
+            } else {
+                res()
+            }
+        })
+    })
 
+}
+
+app.listen(PORT, () => {
+    console.log(`Listening to port ${PORT}`)
+})
