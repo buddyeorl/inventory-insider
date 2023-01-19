@@ -106,12 +106,13 @@ function crawlWebsite() {
                     console.log(`URLs:`);
 
                     sendSlackMessage(`Match found`, "T04GK53T3V5", "B04GT47FA06", "GnDr0oyA9b6TgI1WswCqy9sK")
-                    links.each((i, el) => {
+                    links.each(async (i, el) => {
                         sendSlackMessage(`https://www.hermes.com${$(el).attr('href')}`, "T04GK53T3V5", "B04GT47FA06", "GnDr0oyA9b6TgI1WswCqy9sK")
                         console.log("https://www.hermes.com" + $(el).attr('href'));
+                        await writeToFile('./logs/allFound.json', ["https://www.hermes.com" + $(el).attr('href')]);
                     });
 
-                    await writeToFile('./logs/allFound.json', links.map((el) => $(el).attr('href')));
+
                 } else {
                     console.log(`Match not found`);
                 }
