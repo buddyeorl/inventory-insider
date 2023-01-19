@@ -11,7 +11,7 @@ var isRunning = false;
 var schedule = {
     isRunning: false,
     start: new Date().setHours(15),// 7AM IN PST
-    end: new Date().setHours(25) // 
+    end: new Date().setHours(23) // 
 }
 //initialize app
 const app = express();
@@ -136,7 +136,7 @@ const randomDelay = async () => {
 
     let currentTime = new Date();
     let isScheduledFinished = currentTime > schedule.start && currentTime < schedule.end
-    if ((schedule.isRunning && !isScheduledFinished) || !(schedule.isRunning && shouldStop)) {
+    if ((schedule.isRunning && !isScheduledFinished) || (!schedule.isRunning && !shouldStop)) {
         console.log(`current time ${isScheduledFinished}, schedule time ${schedule.end}, currentTime ${currentTime}`)
         await crawlWebsite();
     }
