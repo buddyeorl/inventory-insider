@@ -139,9 +139,9 @@ const randomDelay = async () => {
     let date = new Date();
     let offset = date.getTimezoneOffset() * 60000; //offset in milliseconds
     let currentTime = new Date(date.getTime() + offset + (-8 * 60 * 60 * 1000));
-    let hours = currentTime.getUTCHours();
+    let hours = currentTime.getHours();
     let shouldCrawl = hours > schedule.start && hours < schedule.end
-    console.log(`current time ${shouldCrawl}, schedule start time ${schedule.start}:00, schedule end time ${schedule.end}:00, currentTime ${currentTime}`)
+    console.log(`current time ${shouldCrawl}, schedule start time ${schedule.start}:00, schedule end time ${schedule.end}:00, currentTime ${currentTime}, current Hours ${hours}`)
     if ((schedule.isRunning && shouldCrawl) || (!schedule.isRunning && !shouldStop)) {
         await crawlWebsite();
     }
