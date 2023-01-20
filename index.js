@@ -141,7 +141,7 @@ const randomDelay = async () => {
     let currentTime = new Date(date.getTime() + offset + (-8 * 60 * 60 * 1000));
     let hours = currentTime.getUTCHours();
     let shouldCrawl = hours > schedule.start && hours < schedule.end
-    console.log(`current time ${shouldCrawl}, schedule start time ${schedule.start}:00, schedule end time ${schedule.end}:00, currentTime ${currentTime.toLocaleString("en-US", { timeZone: "America/Los_Angeles" })}`)
+    console.log(`current time ${shouldCrawl}, schedule start time ${schedule.start}:00, schedule end time ${schedule.end}:00, currentTime ${currentTime.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', timeZoneName: 'short' })}`)
     if ((schedule.isRunning && shouldCrawl) || (!schedule.isRunning && !shouldStop)) {
         await crawlWebsite();
     }
