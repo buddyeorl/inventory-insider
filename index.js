@@ -10,12 +10,13 @@ var shouldStop = false;
 var isRunning = false;
 var schedule = {
     isRunning: false,
-    start: new Date().setHours(15),// 7AM IN PST
-    end: new Date().setHours(25) // //4PM IN PST
+    start: new Date(new Date().setHours(7, 0, 0)).toLocaleString("en-US", { timeZone: "America/Los_Angeles" }),// 7AM IN PST
+    end: new Date(new Date().setHours(17, 0, 0)).toLocaleString("en-US", { timeZone: "America/Los_Angeles" }) // //4PM IN PST
 }
 //initialize app
 const app = express();
 app.use(express.json());
+app.use(express.static('public'))
 
 let currentUrlIndex = -1;
 const url = [
@@ -75,7 +76,7 @@ function crawlWebsite() {
             }
         }, async function (error, response, html) {
             console.log('request recevied', response.statusCode)
-            await writeToFile('./logs/last.json', [response.statusCode]);
+            await writeToFile('./logs/last.json', [{ code: response.statusCode, time: new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" }) }]);
             if (!error && response.statusCode == 200) {
                 // parse the HTML of the website
                 const $ = cheerio.load(html);
@@ -109,7 +110,7 @@ function crawlWebsite() {
                     links.each(async (i, el) => {
                         sendSlackMessage(`https://www.hermes.com${$(el).attr('href')}`, "T04GK53T3V5", "B04GT47FA06", "GnDr0oyA9b6TgI1WswCqy9sK")
                         console.log("https://www.hermes.com" + $(el).attr('href'));
-                        await writeToFile('./logs/allFound.json', ["https://www.hermes.com" + $(el).attr('href')]);
+                        await writeToFile('./logs/allFound.json', [{ itemURL: "https://www.hermes.com" + $(el).attr('href'), time: new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" }) }]);
                     });
 
 
@@ -135,7 +136,7 @@ const randomDelay = async () => {
         currentUrlIndex = 0;
     }
 
-    let currentTime = new Date();
+    let currentTime = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
     let shouldCrawl = currentTime > schedule.start && currentTime < schedule.end
     if ((schedule.isRunning && shouldCrawl) || (!schedule.isRunning && !shouldStop)) {
         console.log(`current time ${shouldCrawl}, schedule time ${schedule.end}, currentTime ${currentTime}`)
@@ -176,6 +177,10 @@ app.post('/api/follow', (req, res) => {
         shouldStop = true;
         res.json({ message: "Crawler stopped successfully" })
     }
+})
+
+app.get("/api/wish-list", async (req, res) => {
+    res.json({ wishList: targetList })
 })
 
 app.get("/api/found", async (req, res) => {
