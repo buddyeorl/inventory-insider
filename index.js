@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import request from 'request';
 import cheerio from 'cheerio';
 import fs from 'fs';
-
+import { faker } from '@faker-js/faker';
 
 const PORT = process.env.PORT || 3001;
 var shouldStop = false;
@@ -106,7 +106,9 @@ function generateRandomHeaders() {
 
 function crawlWebsite() {
     console.log('starting to crawl', url[currentUrlIndex])
-    const headers = generateRandomHeaders();
+    //const headers = generateRandomHeaders();
+    const headers = createHeaders()
+    console.log(headers)
     return new Promise((res, rej) => {
         // make an HTTP request to the website
         request(url[currentUrlIndex], {
@@ -269,3 +271,17 @@ const writeToFile = async (path, data) => {
 app.listen(PORT, () => {
     console.log(`Listening to port ${PORT}`)
 })
+
+
+function createHeaders() {
+    let headers = {};
+    headers["User-Agent"] = faker.internet.userAgent();
+    headers["Accept-Language"] = "en-US";
+    headers["X-Forwarded-For"] = faker.internet.ip();
+    headers["X-Real-IP"] = faker.internet.ip();
+    headers["Referer"] = faker.internet.url();
+    headers["Origin"] = faker.internet.url();
+    // headers["Connection"] = faker.random.arrayElement(["keep-alive", "close"]);
+    headers["Connection"] = "keep-alive";
+    return headers;
+}
