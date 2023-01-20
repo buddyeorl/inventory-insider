@@ -60,6 +60,14 @@ async function sendSlackMessage(message, workspace, channelId, slackToken) {
     }
 }
 
+function generateChromeVersion() {
+    const majorVersion = Math.floor(Math.random() * 89) + 1;
+    const minorVersion = Math.floor(Math.random() * 10);
+    const buildVersion = Math.floor(Math.random() * 10000);
+    const patchVersion = Math.floor(Math.random() * 100);
+    return `Chrome/${majorVersion}.${minorVersion}.${buildVersion}.${patchVersion}`;
+}
+
 
 function crawlWebsite() {
     console.log('starting to crawl', url[currentUrlIndex])
@@ -67,7 +75,7 @@ function crawlWebsite() {
         // make an HTTP request to the website
         request(url[currentUrlIndex], {
             headers: {
-                'User-Agent': 'Chrome/89.0.4389.82',
+                'User-Agent': generateChromeVersion(),
                 'Accept-Language': 'en-US,en;q=0.9',
                 // 'Accept-Encoding': 'gzip, deflate, br',
                 'Connection': 'keep-alive',
