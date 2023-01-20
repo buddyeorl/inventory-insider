@@ -19,14 +19,11 @@
   },
   "homepage": "https://github.com/buddyeorl/inventory-insider#readme",
   "dependencies": {
+    "@faker-js/faker": "^7.6.0",
     "cheerio": "^1.0.0-rc.12",
     "express": "^4.18.2",
-    "faker": "^6.6.6",
     "node-fetch": "^3.3.0",
     "request": "^2.88.2"
   },
-  "type": "module",
-  "devDependencies": {
-    "@faker-js/faker": "^7.6.0"
-  }
+  "type": "module"
 }
