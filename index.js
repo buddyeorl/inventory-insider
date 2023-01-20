@@ -10,8 +10,8 @@ var shouldStop = false;
 var isRunning = false;
 var schedule = {
     isRunning: false,
-    start: new Date(new Date().setHours(7, 0, 0)).toLocaleString("en-US", { timeZone: "America/Los_Angeles" }),// 7AM IN PST
-    end: new Date(new Date().setHours(17, 0, 0)).toLocaleString("en-US", { timeZone: "America/Los_Angeles" }) // //4PM IN PST
+    start: new Date(new Date().setHours(7, 0, 0).toLocaleString("en-US", { timeZone: "America/Los_Angeles" })),// 7AM IN PST
+    end: new Date(new Date().setHours(17, 0, 0).toLocaleString("en-US", { timeZone: "America/Los_Angeles" })) // //4PM IN PST
 }
 //initialize app
 const app = express();
@@ -138,8 +138,8 @@ const randomDelay = async () => {
 
     let currentTime = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
     let shouldCrawl = currentTime > schedule.start && currentTime < schedule.end
+    console.log(`current time ${shouldCrawl}, schedule start time ${schedule.start}, schedule end time ${schedule.end}, currentTime ${currentTime}`)
     if ((schedule.isRunning && shouldCrawl) || (!schedule.isRunning && !shouldStop)) {
-        console.log(`current time ${shouldCrawl}, schedule time ${schedule.end}, currentTime ${currentTime}`)
         await crawlWebsite();
     }
     // await crawlWebsite();
