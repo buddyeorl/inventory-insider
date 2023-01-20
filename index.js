@@ -10,8 +10,8 @@ var shouldStop = false;
 var isRunning = false;
 var schedule = {
     isRunning: false,
-    start: new Date(new Date().setHours(7, 0, 0).toLocaleString("en-US", { timeZone: "America/Los_Angeles" })),// 7AM IN PST
-    end: new Date(new Date().setHours(17, 0, 0).toLocaleString("en-US", { timeZone: "America/Los_Angeles" })) // //4PM IN PST
+    start: new Date(new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" }).setHours(7, 0, 0)),// 7AM IN PST
+    end: new Date(new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" }).setHours(17, 0, 0)) // //4PM IN PST
 }
 //initialize app
 const app = express();
