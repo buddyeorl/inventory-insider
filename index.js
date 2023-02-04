@@ -6,6 +6,18 @@ import fs from 'fs';
 import { faker } from '@faker-js/faker';
 
 const PORT = process.env.PORT || 3001;
+const MIN_WAIT = 55
+const MAX_WAIT = 95
+const schedules = [
+    {
+        start: 7,
+        end: 9
+    },
+    {
+        start: 11,
+        end: 14
+    }
+]
 var shouldStop = false;
 var isRunning = false;
 var schedule = {
@@ -20,14 +32,23 @@ app.use(express.static('public'))
 
 let currentUrlIndex = -1;
 const url = [
-    'https://www.hermes.com/us/en/category/women/bags-and-small-leather-goods/bags-and-clutches/#|',
-    'https://www.hermes.com/us/en/category/women/bags-and-small-leather-goods/small-leather-goods/#|'
+    'https://www.hermes.com/us/en/category/women/bags-and-small-leather-goods/bags-and-clutches/',
+    'https://www.hermes.com/us/en/category/women/bags-and-small-leather-goods/small-leather-goods/#|',
+    'https://www.hermes.com/us/en/category/women/bags-and-small-leather-goods/leather-accesories/#|'
+    // `https://www.hermes.com/us/en/search/?s=${encodeURI("evelyne 16 amazone")}`,
+    // `https://www.hermes.com/us/en/search/?s=${encodeURI("rodeo pegase pm")}`,
+    // `https://www.hermes.com/us/en/search/?s=${encodeURI("rodeo pm")}`,
+    // `https://www.hermes.com/us/en/search/?s=${encodeURI("lindy mini")}`,
+    // `https://www.hermes.com/us/en/search/?s=${encodeURI("lindy 26")}`,
+    // `https://www.hermes.com/us/en/search/?s=${encodeURI("constance long to go")}`,
 ];
 
 const targetList = [
     "evelyne 16 amazone",
     "rodeo pegase pm",
+    "rodeo pm",
     "lindy mini",
+    "lindy 26",
     "constance long to go"
 ]
 
@@ -123,6 +144,7 @@ function crawlWebsite() {
 
                 const links = $('a').filter((i, el) => {
                     let currentElText = $(el).text().toLowerCase();
+                    console.log(currentElText);
                     let found = targetList.some(target => currentElText.includes(target))
                     if (found) {
                         // Search for images inside the current 'a' element
@@ -168,7 +190,7 @@ function getRandomArbitrary(min, max) {
     return Math.random() * (max - min) + min;
 }
 const randomDelay = async () => {
-    const currentDelay = getRandomArbitrary(55, 120);
+    const currentDelay = getRandomArbitrary(MIN_WAIT, MAX_WAIT);
     console.log("currentDelay", currentDelay * 1000);
     // Increment the current URL index and reset it to 0 if all URLs have been visited
     currentUrlIndex++;
@@ -180,6 +202,15 @@ const randomDelay = async () => {
     let offset = date.getTimezoneOffset() * 60000; //offset in milliseconds
     let currentTime = new Date(date.getTime() + offset + (-8 * 60 * 60 * 1000));
     let hours = currentTime.getHours();
+
+    //change schedule based on the current time
+    if (hours > schedules[0].end) {
+        schedule.end = schedules[1].end
+        schedule.start = schedules[1].start
+    } else {
+        schedule.end = schedules[0].end
+        schedule.start = schedules[0].start
+    }
     let shouldCrawl = hours >= schedule.start && hours < schedule.end
     console.log(`current time ${shouldCrawl}, schedule start time ${schedule.start}:00, schedule end time ${schedule.end}:00, currentTime ${currentTime}, current Hours ${hours}`)
     if ((schedule.isRunning && shouldCrawl) || (!schedule.isRunning && !shouldStop)) {
@@ -193,6 +224,13 @@ const randomDelay = async () => {
         }, currentDelay * 1000)
     }
 }
+
+
+app.get("/api/update-hermes-list", async (req, res) => {
+    currentUrlIndex = 0
+    await crawlWebsite()
+    res.json({ message: "finished updating hermes list" })
+})
 
 app.post('/api/follow', (req, res) => {
     const { order } = req.body;

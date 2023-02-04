@@ -1,0 +1,236 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="./assets/css/styles.css">
+    </head>
+    <body>
+        <!-- <section>
+            <button id="run-schedule"> Run Schedule</button>
+            <button id="start"> Start</button>
+            <button id="stop"> Stop</button>
+        </section> -->
+        <section>
+            <h2>Wish List:</h2>
+            <ul id="wish-list">
+
+            </ul>
+        </section>
+        <section>
+            <h2>Found for:</h2>
+            <ul id="found">
+
+            </ul>
+        </section>
+        <div id="suggestions"></div>
+        <div>
+            <input type="text" id="searchTerm" onkeyup="showSuggestions()">
+        </div>
+        <div id="suggestions"></div>
+        <script>
+class RadixTreeNode {
+    constructor(char) {
+        this.char = char;
+        this.end = false;
+        this.children = {};
+    }
+}
+
+class RadixTree {
+    constructor() {
+        this.root = new RadixTreeNode('');
+    }
+
+    insert(word) {
+        let curr = this.root;
+        for (let i = 0; i < word.length; i++) {
+            if (!curr.children[word[i].toLowerCase()]) {
+                curr.children[word[i].toLowerCase()] = new RadixTreeNode(word[i].toLowerCase());
+            }
+            curr = curr.children[word[i].toLowerCase()];
+        }
+        curr.end = true;
+    }
+
+    searchForSuggestions(searchTerm) {
+    let suggestions = [];
+    search(this.root, '', 0);
+    searchAssociations(associationTrees, searchTerm);
+    return suggestions;
+
+    function search(node, suggestion, searchIndex, searchTerm) {
+    if (!node || !searchTerm || searchIndex >= searchTerm.length) {
+        return;
+    }
+    suggestion += node.char;
+
+    if (node.end) {
+        if(suggestion.includes(searchTerm)){
+            suggestions.push(suggestion);
+        }
+    }
+    for (let child in node.children) {
+        if(child.includes(searchTerm[searchIndex])){
+            search(node.children[child], suggestion, searchIndex + 1, searchTerm);
+        }
+    }
+}
+
+
+
+
+
+    function searchAssociations(tree, term) {
+        if (tree[term]) {
+            for (let i = 0; i < popularPhrases.length; i++) {
+                if (popularPhrases[i].description.includes(term)) {
+                    suggestions.push(popularPhrases[i].description);
+                }
+            }
+            for (let key in tree[term]) {
+                searchAssociations(tree[term], key);
+            }
+        }
+    }
+}
+
+}
+
+let popularPhrases = [
+    {description: "the force is strong with this one"},
+    {description: "you shall not pass"},
+    {description: "here's Johnny"},
+    {description: "I am your father"},
+    {description: "you can't handle the truth"},
+    {description: "I'll be back"},
+    {description: "bond. James bond"},
+    {description: "I am the one who knocks"},
+    {description: "I am Iron Man"},
+    {description: "you can't kill me"},
+    {description: "I am the walrus"},
+    {description: "you're gonna need a bigger boat"},
+    {description: "it's alive"},
+    {description: "I'm king of the world"},
+    {description: "I'll make him an offer he can't refuse"},
+    {description: "life moves pretty fast"},
+    {description: "there's no place like home"},
+    {description: "I'm not a monster, I'm just ahead of the curve"},
+    {description: "if you build it, they will come"},
+    {description: "I'm the boss"},
+    {description: "I'm not a crook"},
+    {description: "I'm gonna be the king of the pirates"},
+    {description: "I'm not a robot"},
+    {description: "I'm a Jedi, like my father before me"},
+    {description: "I'm not afraid to die"},
+    {description: "I'm not a villain"}
+];
+
+let associationTrees = {
+    summer: {
+        heat: {
+            heatstroke: {},
+            dehydration: {}
+        },
+        sunburn: {},
+        insect: {
+            bites: {},
+            stings: {}
+        }
+    },
+    winter: {
+        cold: {
+            hypothermia: {},
+            frostbite: {}
+        },
+        snow: {
+            slippery: {},
+            shoveling: {}
+        },
+        ice: {
+            slips: {},
+            falls: {}
+        }
+    },
+    knee: {
+            arthritis: {},
+            meniscus: {},
+            ligament: {
+                ACL: {},
+                PCL: {},
+                MCL: {},
+                LCL: {}
+            },
+            bursitis: {},
+            tendinitis: {}
+        }
+    }
+
+let trie = new RadixTree();
+popularPhrases.forEach(phrase => trie.insert(phrase.description));
+
+// search function that utilizes the trie and association tree
+function showSuggestions() {
+    let searchTerm = document.getElementById("searchTerm").value.toLowerCase();
+    if(!searchTerm) {
+        let suggestionsElem = document.getElementById("suggestions");
+        suggestionsElem.innerHTML = "";
+        suggestionsElem.style.display = "none";
+        return;
+    }
+    let suggestions = searchForSuggestions(searchTerm);
+    let suggestionsElem = document.getElementById("suggestions");
+    suggestionsElem.innerHTML = "";
+    suggestionsElem.style.display = "block";
+    suggestions.forEach(sug => {
+        let suggestionElem = document.createElement("div");
+        suggestionElem.innerHTML = sug.replace(searchTerm, `<b>${searchTerm}</b>`);
+        suggestionsElem.appendChild(suggestionElem);
+    });
+}
+
+
+function searchForSuggestions(searchTerm) {
+    let suggestions = trie.searchForSuggestions(searchTerm);
+    let associationTree = associationTrees[searchTerm.toLowerCase()];
+    if (associationTree) {
+        searchAssociationTree(associationTree, searchTerm, suggestions);
+    }
+
+    function searchAssociationTree(node, suggestion, suggestions) {
+        Object.keys(node).forEach(key => {
+            let newSuggestion = suggestion + ' ' + key;
+            suggestions.push(newSuggestion);
+            searchAssociationTree(node[key], newSuggestion, suggestions);
+        });
+    }
+
+    return suggestions;
+}
+
+
+function showSuggestions() {
+    let searchTerm = document.getElementById("searchTerm").value.toLowerCase();
+    if(!searchTerm) {
+        let suggestionsElem = document.getElementById("suggestions");
+        suggestionsElem.innerHTML = "";
+        suggestionsElem.style.display = "none";
+        return;
+    }
+    let suggestions = searchForSuggestions(searchTerm);
+    let suggestionsElem = document.getElementById("suggestions");
+    suggestionsElem.innerHTML = "";
+    suggestionsElem.style.display = "block";
+    suggestions.forEach(sug => {
+        let suggestionElem = document.createElement("div");
+        suggestionElem.innerHTML = sug.replace(searchTerm, `<b>${searchTerm}</b>`);
+        suggestionsElem.appendChild(suggestionElem);
+    });
+}
+
+
+
+   
+
+        </script>
+        
+        <script src="./assets/js/scripts.js"></script>
+    </body>
+</html>
